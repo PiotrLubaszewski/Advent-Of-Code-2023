@@ -1,10 +1,10 @@
-# Advent of Code 2023 🎄
+# Advent of Code 2024 🎄
 
-![Advent of Code](https://img.shields.io/badge/Advent%20of%20Code-2023-blue.svg)
+![Advent of Code](https://img.shields.io/badge/Advent%20of%20Code-2024-blue.svg)
 
 ## 📖 About the Project
 
-This repository contains my solutions to the [Advent of Code 2023](https://adventofcode.com/2023), an annual event that provides daily programming challenges throughout December. Each task is a logical puzzle that can be solved in any programming language.
+This repository contains my solutions to the [Advent of Code 2024](https://adventofcode.com/2024), an annual event that provides daily programming challenges throughout December. Each task is a logical puzzle that can be solved in any programming language.
 
 💡 Technologies
 
