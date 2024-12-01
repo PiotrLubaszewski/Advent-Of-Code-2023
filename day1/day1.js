@@ -1,5 +1,5 @@
 const fs = require('fs');
-const fileName = 'day1_data.txt';
+const fileName = 'day1.txt';
 
 const data = fs.readFileSync(process.cwd() + '/data/' + fileName).toString();
 
