@@ -1,7 +1,7 @@
 const fs = require('fs');
 const fileName = 'day1_data.txt';
 
-const data = fs.readFileSync(process.cwd() + '/' + fileName).toString();
+const data = fs.readFileSync(process.cwd() + '/data/' + fileName).toString();
 
 const rows = data.split('\n').filter(item => item != '');
 const lefts = [];
