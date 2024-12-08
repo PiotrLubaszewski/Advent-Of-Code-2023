@@ -43,51 +43,77 @@ const getVerticalBarriers = (barriers, xPosition) => {
         })
 }
 
-const getHorizontalBarriers = (yPosition) => {
+const getHorizontalBarriers = (barriers, yPosition) => {
      return barriers.filter(b => {
             return b.y === yPosition;
         })
 }
 
-const makeMove = (barriers, cursor) => {
-    let distinctPositionsCount = 0;
+const handleUp = (barriers, cursor) => {
+    const barriersOnAxis = getVerticalBarriers(barriers, cursor.x);
+    const closestBarrier = barriersOnAxis.filter(boa => {
+        return boa.y < cursor.y;
+    })[0];
+    return  cursor.y - closestBarrier.y;
+}
+
+const handleRight = (barriers, cursor) => {
+    const barriersOnAxis = getHorizontalBarriers(barriers, cursor.y);
+    const closestBarrier = barriersOnAxis.filter(boa => {
+        return boa.x > cursor.x;
+    })[0] 
+    return closestBarrier.x - cursor.x;
+}
+
+const handleDown = (barriers, cursor) => {
+    const barriersOnAxis = getVerticalBarriers(barriers, cursor.x);
+    const closestBarrier = barriersOnAxis.filter(boa => {
+        return boa.y > cursor.y;
+    })[0]
+    return closestBarrier.y - cursor.y;
+}
+
+const handleLeft = (barriers, cursor) => {
+    const barriersOnAxis = getHorizontalBarriers(barriers, cursor.y);
+    const closestBarrier = barriersOnAxis.filter(boa => {
+        return boa.x < cursor.x;
+    })[0];
+    return cursor.y - closestBarrier.y; 
+}
+
+const makeMove = (barriers, cursor, distinctPositionsCount = 0) => {
+    let newCursor = { ...cursor }
     if(cursor.direction === 'UP') {
-        const barriersOnAxis = getVerticalBarriers(barriers, cursor.x);
-        const closestBarrier = barriersOnAxis.filter(boa => {
-           return boa.y < cursor.y;
-        })[0];
-        distinctPositionsCount += cursor.y - closestBarrier.y;
+        distinctPositionsCount += handleUp(barriers, cursor);
+        newCursor.y = newCursor.y - distinctPositionsCount - 1;
+        newCursor.direction = 'RIGHT';
     }
     if(cursor.direction === 'RIGHT') {
-        const barriersOnAxis = getHorizontalBarriers(barriers, cursor.y);
-        const closestBarrier = barriersOnAxis.filter(boa => {
-           return boa.x > cursor.x;
-        })[0] 
-        distinctPositionsCount += closestBarrier.x - cursor.x;
+        distinctPositionsCount += handleRight(barriers, cursor);
+        newCursor.x = newCursor.x + distinctPositionsCount - 1;
+        newCursor.direction = 'DOWN';
     }
     if(cursor.direction === 'DOWN') {
-        const barriersOnAxis = getVerticalBarriers(barriers, cursor.x);
-        const closestBarrier = barriersOnAxis.filter(boa => {
-            return boa.y > cursor.y;
-        })[0]
-        distinctPositionsCount += closestBarrier.y - cursor.y;
-
+        distinctPositionsCount += handleDown(barriers, cursor);
+        newCursor.y = newCursor.y + distinctPositionsCount - 1;
+        newCursor.direction = 'LEFT';
     }
     if(cursor.direction === 'LEFT') {
-        const barriersOnAxis = getHorizontalBarriers(barriers, cursor.y);
-        const closestBarrier = barriersOnAxis.filter(boa => {
-           return boa.x < cursor.x;
-        })[0];
-        distinctPositionsCount += cursor.y - closestBarrier.y; 
+        distinctPositionsCount += handleLeft(barriers, cursor);
+        newCursor.x = newCursor.x - distinctPositionsCount - 1;
+        newCursor.direction = 'UP';
     }
-    return distinctPositionsCount - 1;
+    return { 
+        cursor: newCursor, 
+        distinctPositionsCount: distinctPositionsCount - 1 
+    };
 }
 
 const main = () => {
     const data = readData('day6.txt');
     const { barriers, cursor } = prepareData(data);
-    const distance = makeMove(barriers, cursor);
-    console.log(distance);
+    const isFinished = false; 
+    const moves = 0;
 }
 
 main();
