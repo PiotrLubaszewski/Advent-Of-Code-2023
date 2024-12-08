@@ -1,119 +1,86 @@
 const fs = require('fs');
-const path = require('path');
 
 const readData = (fileName) => {
-    const filePath = path.join(process.cwd(), 'data', fileName);
-    return fs.readFileSync(filePath, 'utf-8')
-        .split('\n')
-        .filter(line => line.trim() !== '');
+    const data = fs.readFileSync(fileName, 'utf-8').split('\n');
+    return data.map(line => line.split(''));
 };
 
-const prepareData = (data) => {
-    const barriers = [];
-    let cursor = {}
-    for(let i = 0; i < data.length; i++) {
-        for (let j = 0; j < data[i].length; j++) {
-            const charAtPosition = data[i][j];
-            const x = j + 1;
-            const y = i + 1;
-            if(charAtPosition === '#') {
-                barriers.push({x, y})
-            };
-            if(charAtPosition === '^') {
-                cursor = {x, y, direction: "UP"}
-            }
-            if(charAtPosition === '>') {
-                cursor = {x, y, direction: "RIGHT"}
-            }
-            if(charAtPosition === 'v') {
-                cursor = {x, y, direction: "DOWN"}
-            }
-            if(charAtPosition === '<') {
-                cursor = {x, y, direction: "LEFT"}
+const findGuard = (map) => {
+    let guard = null;
+    for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[y].length; x++) {
+            if ('^v<>'.includes(map[y][x])) {
+                guard = { x, y, direction: map[y][x] };
+                map[y][x] = '.'; 
+                break;
             }
         }
+        if (guard) break;
+    }
+    return guard;
+};
+
+const getNextPosition = (guard) => {
+    switch (guard.direction) {
+        case '^': return { x: 0, y: -1 };
+        case '>': return { x: 1, y: 0 };
+        case 'v': return { x: 0, y: 1 };
+        case '<': return { x: -1, y: 0 };
+        default: return { x: 0, y: 0 };
+    }
+};
+
+const moveGuard = (map, guard) => {
+    const nextPosition = getNextPosition(guard);
+    const newX = guard.x + nextPosition.x;
+    const newY = guard.y + nextPosition.y;
+
+    if (newX < 0 || newY < 0 || newY >= map.length || newX >= map[newY].length) {
+        return { guard, outOfBounds: true };
     }
 
-    return { barriers, cursor };
-}
-
-const getVerticalBarriers = (barriers, xPosition) => {
-    return barriers.filter(b => {
-            return b.x === xPosition;
-        })
-}
-
-const getHorizontalBarriers = (barriers, yPosition) => {
-     return barriers.filter(b => {
-            return b.y === yPosition;
-        })
-}
-
-const handleUp = (barriers, cursor) => {
-    const barriersOnAxis = getVerticalBarriers(barriers, cursor.x);
-    const closestBarrier = barriersOnAxis.filter(boa => {
-        return boa.y < cursor.y;
-    })[0];
-    return  cursor.y - closestBarrier.y;
-}
-
-const handleRight = (barriers, cursor) => {
-    const barriersOnAxis = getHorizontalBarriers(barriers, cursor.y);
-    const closestBarrier = barriersOnAxis.filter(boa => {
-        return boa.x > cursor.x;
-    })[0] 
-    return closestBarrier.x - cursor.x;
-}
-
-const handleDown = (barriers, cursor) => {
-    const barriersOnAxis = getVerticalBarriers(barriers, cursor.x);
-    const closestBarrier = barriersOnAxis.filter(boa => {
-        return boa.y > cursor.y;
-    })[0]
-    return closestBarrier.y - cursor.y;
-}
-
-const handleLeft = (barriers, cursor) => {
-    const barriersOnAxis = getHorizontalBarriers(barriers, cursor.y);
-    const closestBarrier = barriersOnAxis.filter(boa => {
-        return boa.x < cursor.x;
-    })[0];
-    return cursor.y - closestBarrier.y; 
-}
-
-const makeMove = (barriers, cursor, distinctPositionsCount = 0) => {
-    let newCursor = { ...cursor }
-    if(cursor.direction === 'UP') {
-        distinctPositionsCount += handleUp(barriers, cursor);
-        newCursor.y = newCursor.y - distinctPositionsCount - 1;
-        newCursor.direction = 'RIGHT';
+    if (map[newY][newX] !== '#') {
+        guard.x = newX;
+        guard.y = newY;
+        return { guard, outOfBounds: false };
     }
-    if(cursor.direction === 'RIGHT') {
-        distinctPositionsCount += handleRight(barriers, cursor);
-        newCursor.x = newCursor.x + distinctPositionsCount - 1;
-        newCursor.direction = 'DOWN';
-    }
-    if(cursor.direction === 'DOWN') {
-        distinctPositionsCount += handleDown(barriers, cursor);
-        newCursor.y = newCursor.y + distinctPositionsCount - 1;
-        newCursor.direction = 'LEFT';
-    }
-    if(cursor.direction === 'LEFT') {
-        distinctPositionsCount += handleLeft(barriers, cursor);
-        newCursor.x = newCursor.x - distinctPositionsCount - 1;
-        newCursor.direction = 'UP';
-    }
-    return { 
-        cursor: newCursor, 
-        distinctPositionsCount: distinctPositionsCount - 1 
-    };
-}
 
-const main = () => {
-    const data = readData('day6.txt');
-    const { barriers, cursor } = prepareData(data);
-    const isFinished = false; 
-    const moves = 0;
-}
+    guard.direction = changeDirection(guard.direction);
+    return { guard, outOfBounds: false };
+};
 
-main();
+const changeDirection = (currentDirection) => {
+    switch (currentDirection) {
+        case '^': return '>'; 
+        case '>': return 'v';
+        case 'v': return '<';
+        case '<': return '^';
+        default: return currentDirection;
+    }
+};
+
+const simulateGuard = (fileName) => {
+    let map = readData(fileName);
+    let guard = findGuard(map);
+    let visited = new Set();
+    visited.add(`${guard.x},${guard.y}`);
+
+    let outOfBounds = false;
+    let steps = 0;
+
+    while (!outOfBounds) {
+        const result = moveGuard(map, guard);
+        guard = result.guard;
+        outOfBounds = result.outOfBounds;
+
+        if (!outOfBounds) {
+            visited.add(`${guard.x},${guard.y}`);
+        }
+
+        steps++;
+    }
+
+    console.log(`Strażnik odwiedził ${visited.size} unikalnych pozycji.`);
+};
+
+simulateGuard('data/day6.txt');
